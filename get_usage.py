@@ -6,6 +6,8 @@ import xml.etree.ElementTree
 import requests
 from influxdb import InfluxDBClient
 
+debug = os.environ.get('ABB_DEBUG', 0) == 1
+
 db = InfluxDBClient(
     os.environ['INFLUX_HOST'],
     os.environ['INFLUX_PORT'],
@@ -14,7 +16,6 @@ db = InfluxDBClient(
     os.environ['INFLUX_DB'])
 
 def http_get(user, passw):
-    """fuckoff"""
     URL = "https://my.aussiebroadband.com.au/usage.php?xml=yes"
     data = {
         'login_username': user,
@@ -36,17 +37,15 @@ def http_get(user, passw):
         'rollover':    int(data['rollover'])
     }
 
-    """Please, no"""
 if not os.environ['INFLUX_DB'] in db.get_list_database():
         db.create_database(os.environ['INFLUX_DB'])
 
 while True:
     users = os.environ['MYAUSSIE_USER'].split(',')
     passes = os.environ['MYAUSSIE_PASS'].split(',')
-    json_body = [
-        
-    ]
+    json_body = []
     now = datetime.now()
+
     for i in range(len(users)):
         data = http_get(users[i], passes[i])
         json_body.append({
@@ -64,7 +63,8 @@ while True:
             }
         })
 
-    print(json_body)
+    if debug:
+        print(json_body)
     db.write_points(json_body)
     time.sleep(15 * 60)
 

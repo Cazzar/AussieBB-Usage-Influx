@@ -1,0 +1,9 @@
+version: "3"
+services:
+  aussie_usage:
+    container_name: aussiebb_usage
+    build: .
+    links:
+    env_file: .env
+    restart: unless-stopped
+

@@ -580,20 +580,10 @@
             "selected": false,
             "text": "All",
             "value": "$__all"
-          },
-          {
-            "selected": true,
-            "text": "cayde.dixon",
-            "value": "cayde.dixon"
-          },
-          {
-            "selected": false,
-            "text": "michaelrossiter",
-            "value": "michaelrossiter"
           }
         ],
         "query": "SHOW TAG VALUES FROM \"usage\" WITH KEY = \"user\" ",
-        "refresh": 0,
+        "refresh": 900,
         "regex": "",
         "sort": 0,
         "tagValuesQuery": "",

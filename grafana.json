@@ -563,10 +563,9 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
-          "text": "cayde.dixon",
+          "text": "example.user",
           "value": [
-            "cayde.dixon"
+            "example.user"
           ]
         },
         "datasource": "aussiebb",
@@ -575,15 +574,9 @@
         "label": null,
         "multi": true,
         "name": "Users",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          }
-        ],
+        "options": [],
         "query": "SHOW TAG VALUES FROM \"usage\" WITH KEY = \"user\" ",
-        "refresh": 900,
+        "refresh": 1,
         "regex": "",
         "sort": 0,
         "tagValuesQuery": "",

@@ -345,7 +345,7 @@
             "thresholdMarkers": true
           },
           "id": 2,
-          "interval": null,
+          "interval": "10m",
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
@@ -379,27 +379,23 @@
             "lineColor": "rgb(31, 120, 193)",
             "show": false
           },
-          "tableColumn": "",
+          "tableColumn": "last",
           "targets": [
             {
               "dsType": "influxdb",
               "groupBy": [
                 {
                   "params": [
-                    "$__interval"
+                    "user"
                   ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
+                  "type": "tag"
                 }
               ],
               "measurement": "usage",
               "orderByTime": "ASC",
               "policy": "default",
+              "query": "SELECT last(\"allowance\") FROM \"usage\" WHERE (\"user\" =~ /^$Users$/) GROUP BY \"user\"",
+              "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
@@ -409,10 +405,6 @@
                       "allowance"
                     ],
                     "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "last"
                   }
                 ]
               ],
@@ -635,5 +627,5 @@
   },
   "timezone": "",
   "title": "AussieBroadband Usage",
-  "version": 10
+  "version": 11
 }

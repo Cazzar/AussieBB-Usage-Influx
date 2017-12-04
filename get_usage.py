@@ -1,4 +1,3 @@
-"""fuckoff"""
 from datetime import datetime
 import os
 import time
@@ -8,12 +7,13 @@ from influxdb import InfluxDBClient
 
 debug = os.environ.get('ABB_DEBUG', 0) == 1
 
+db_name = os.environ.get('INFLUX_DB', 'aussiebb')
 db = InfluxDBClient(
-    os.environ['INFLUX_HOST'],
-    os.environ['INFLUX_PORT'],
-    os.environ['INFLUX_USER'],
-    os.environ['INFLUX_PASS'],
-    os.environ['INFLUX_DB'])
+    os.environ.get('INFLUX_HOST', '127.0.0.1'),
+    os.environ.get('INFLUX_PORT', 8086),
+    os.environ.get('INFLUX_USER', 'root'),
+    os.environ.get('INFLUX_PASS', 'root'),
+    db_name)
 
 def http_get(user, passw):
     URL = "https://my.aussiebroadband.com.au/usage.php?xml=yes"
@@ -37,8 +37,8 @@ def http_get(user, passw):
         'rollover':    int(data['rollover'])
     }
 
-if not os.environ['INFLUX_DB'] in db.get_list_database():
-        db.create_database(os.environ['INFLUX_DB'])
+if not db_name in db.get_list_database():
+        db.create_database(db_name)
 
 while True:
     users = os.environ['MYAUSSIE_USER'].split(',')
@@ -66,5 +66,5 @@ while True:
     if debug:
         print(json_body)
     db.write_points(json_body)
-    time.sleep(15 * 60)
+    time.sleep(os.envorn.get('SLEEP_INTERVAL', 900))
 

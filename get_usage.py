@@ -66,5 +66,5 @@ while True:
     if debug:
         print(json_body)
     db.write_points(json_body)
-    time.sleep(os.envorn.get('SLEEP_INTERVAL', 900))
+    time.sleep(os.environ.get('SLEEP_INTERVAL', 900))
 

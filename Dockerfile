@@ -1,9 +1,11 @@
-FROM python:3
+FROM golang
 
-WORKDIR /usr/src/app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+WORKDIR /go/src/app
 COPY . .
 
-ENTRYPOINT [ "python", "./get_usage.py" ]
+RUN go get -d -v
+RUN go install -v
+
+#RUN go get "github.com/ddliu/go-httpclient" "github.com/influxdata/influxdb/client/v2"
+
+CMD ["app"]

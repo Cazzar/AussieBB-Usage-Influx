@@ -1,0 +1,9 @@
+docker-compose.example.yml
+Dockerfile.python
+*.py
+example.png
+grafana.json
+README.md
+requirements.txt
+.git
+.env2

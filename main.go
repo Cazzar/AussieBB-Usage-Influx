@@ -30,7 +30,6 @@ func main() {
   log.Print("Connected to InfluxDB")
 	defer influx.Close()
 
-	//	user, password := os.Getenv(""), "d4D9jXBsT9F8"
 	users := strings.Split(os.Getenv("MYAUSSIE_USER"), ",")
 	passwords := strings.Split(os.Getenv("MYAUSSIE_PASS"), ",")
 

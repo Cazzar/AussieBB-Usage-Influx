@@ -240,6 +240,7 @@ func parseForUser(username string, password string, influx influxdb.Client) {
 			"product":     service.NbnDetails.Product,
 			"rollover":    strconv.Itoa(service.UsageAnniversary),
 			"brand":       customer.Brand,
+			"user":        username,
 		}
 
 		fields := map[string]interface{}{

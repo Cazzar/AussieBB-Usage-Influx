@@ -246,14 +246,15 @@ func parseForUser(username string, password string, influx influxdb.Client) {
 		fields := map[string]interface{}{
 			"download":       usage.DownloadedMb * 1000 * 1000,
 			"upload":         usage.UploadedMb * 1000 * 1000,
-			"allowance":      -1,
-			"left":           usage.RemainingMb,
+			"used":           usage.UsedMb * 1000 * 1000,
 			"days_total":     usage.DaysTotal,
 			"days_remaining": usage.DaysRemaining,
+			// "allowance":    -1,
+			// "left":         usage.RemainingMb,
 		}
 
-		if usage.RemainingMb == nil {
-			fields["left"] = -1
+		if usage.RemainingMb != nil {
+			fields["left"] = usage.RemainingMb
 		}
 
 		if usage.RemainingMb != nil {

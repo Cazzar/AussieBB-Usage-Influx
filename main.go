@@ -249,6 +249,10 @@ func parseForUser(username string, password string, influx influxdb.Client) {
 			"used":           usage.UsedMb * 1000 * 1000,
 			"days_total":     usage.DaysTotal,
 			"days_remaining": usage.DaysRemaining,
+			"description":    service.Description,
+			"poi":            service.NbnDetails.PoiName,
+			"product":        service.NbnDetails.Product,
+			"rollover":       service.UsageAnniversary,
 			// "allowance":    -1,
 			// "left":         usage.RemainingMb,
 		}

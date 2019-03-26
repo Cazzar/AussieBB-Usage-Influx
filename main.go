@@ -11,7 +11,7 @@ import (
 	"time"
 
 	httpclient "github.com/ddliu/go-httpclient"
-	influxdb "github.com/influxdata/influxdb/client/v2"
+	influxdb "github.com/influxdata/influxdb1-client/v2"
 	"github.com/joho/godotenv"
 )
 

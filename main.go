@@ -258,7 +258,7 @@ func parseForUser(username string, password string, influx influxdb.Client) {
 		}
 
 		if usage.RemainingMb != nil {
-			fields["left"] = usage.RemainingMb
+			fields["left"] = *usage.RemainingMb
 		}
 
 		if usage.RemainingMb != nil {

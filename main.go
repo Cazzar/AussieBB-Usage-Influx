@@ -77,7 +77,7 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 	for _, service := range details.Services.NBN {
 		usage, err := customer.GetUsage(service.ServiceID)
 		if err != nil {
-			log.Fatalf("[MyAussie:%s] GetUsage ERROR %s\n", customer.Username, err)
+			log.Printf("[MyAussie:%s] GetUsage ERROR %s\n", customer.Username, err)
 			continue
 		}
 
@@ -111,11 +111,11 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 
 		if usage.RemainingMb != nil {
 			fields["allowance"] = (usage.UsedMb + *usage.RemainingMb) * 1000 * 1000
-		}
+    }
 
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", usage.LastUpdated, time.Now().Location())
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 			continue
 		}
 
@@ -127,12 +127,9 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 		)
 
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 			continue
 		}
-
-		fmt.Println(fields)
-		fmt.Println(tags)
 
 		points.AddPoint(pt)
 	}

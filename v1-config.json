@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "definitions": {
+        "MyAussie User": {
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }, 
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+
+    "properties": {
+        "influxdb": {
+            "type": "object",
+            "required": ["hostname"],
+            "properties": {
+                "hostname": {
+                    "type": "string",
+                    "default": "127.0.0.1"
+                },
+                "port": {
+                    "type": "integer",
+                    "default": "8086"
+                },
+                "database": {
+                    "type": "string",
+                    "default": "aussiebb"
+                },
+                "username": {
+                    "type": "string",
+                    "default": "root"
+                },
+                "password" {
+                    "type": "string",
+                    "default": "root"
+                }
+            }
+        },
+        "MyAussie": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/MyAussie User" }
+        }
+    }
+}

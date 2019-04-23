@@ -2,24 +2,32 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "definitions": {
         "MyAussie User": {
+            "required": [
+                "username",
+                "password"
+            ],
             "properties": {
                 "username": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
-                }, 
+                },
                 "refreshToken": {
                     "type": "string"
+                },
+                "lastAuthenticated": {
+                    "type": "integer" 
                 }
             }
         }
     },
-
     "properties": {
         "influxdb": {
             "type": "object",
-            "required": ["hostname"],
+            "required": [
+                "hostname",
+            ],
             "properties": {
                 "hostname": {
                     "type": "string",
@@ -45,7 +53,9 @@
         },
         "MyAussie": {
             "type": "array",
-            "items": { "$ref": "#/definitions/MyAussie User" }
+            "items": {
+                "$ref": "#/definitions/MyAussie User"
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cazzar/go-myaussieapi"
+	aussiebroadband "github.com/Cazzar/go-myaussieapi"
 	influxdb "github.com/influxdata/influxdb1-client/v2"
 	"github.com/joho/godotenv"
 )
@@ -99,10 +99,31 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 			"days_remaining": usage.DaysRemaining,
 			"description":    service.Description,
 			"poi":            service.NbnDetails.PoiName,
+			"cvc_graph":      service.NbnDetails.CVCGraph,
 			"product":        service.NbnDetails.Product,
 			"rollover":       service.UsageAnniversary,
 			// "allowance":    -1,
 			// "left":         usage.RemainingMb,
+		}
+
+		if service.NbnDetails.SpeedPotential != nil {
+			time, err := time.Parse(time.RFC3339, service.NbnDetails.SpeedPotential.LastTested)
+			if err == nil {
+				pt, err := influxdb.NewPoint(
+					"speed_potential",
+					tags,
+					map[string]interface{}{
+						"download": service.NbnDetails.SpeedPotential.DownloadMbps,
+						"upload":   service.NbnDetails.SpeedPotential.UploadMbps,
+					},
+					time,
+				)
+				if err != nil {
+					points.AddPoint(pt)
+				}
+			} else {
+				log.Println(err)
+			}
 		}
 
 		if usage.RemainingMb != nil {
@@ -111,7 +132,7 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 
 		if usage.RemainingMb != nil {
 			fields["allowance"] = (usage.UsedMb + *usage.RemainingMb) * 1000 * 1000
-    }
+		}
 
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", usage.LastUpdated, time.Now().Location())
 		if err != nil {

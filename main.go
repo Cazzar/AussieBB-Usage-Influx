@@ -18,7 +18,7 @@ func main() {
 	sleepinterval, _ := time.ParseDuration("15m")
 
 	influx, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
-		Addr:     fmt.Sprintf("http://%s:%s", os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT")), //"http://192.168.1.3:8086",
+		Addr:     fmt.Sprintf("http://%s:%s", os.Getenv("INFLUX_HOST"), os.Getenv("INFLUX_PORT")),
 		Username: os.Getenv("INFLUX_USER"),
 		Password: os.Getenv("INFLUX_PASS"),
 	})
@@ -132,6 +132,9 @@ func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
 
 		if usage.RemainingMb != nil {
 			fields["allowance"] = (usage.UsedMb + *usage.RemainingMb) * 1000 * 1000
+		}
+		if usage.LastUpdated == "" {
+			continue
 		}
 
 		t, err := time.ParseInLocation("2006-01-02 15:04:05", usage.LastUpdated, time.Now().Location())

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	aussiebroadband "github.com/Cazzar/go-myaussieapi"
+	"github.com/fiorix/go-redis/redis"
 	influxdb "github.com/influxdata/influxdb1-client/v2"
 	"github.com/joho/godotenv"
 )
@@ -34,6 +35,8 @@ func main() {
 		return
 	}
 
+	cache := redis.New(os.Getenv("REDIS_CONN"))
+
 	users := strings.Split(os.Getenv("MYAUSSIE_USER"), ",")
 	passwords := strings.Split(os.Getenv("MYAUSSIE_PASS"), ",")
 
@@ -45,23 +48,46 @@ func main() {
 	customers := make(map[string]*aussiebroadband.Customer)
 
 	for idx, user := range users {
-		cust, err := aussiebroadband.NewCustomer(user, passwords[idx])
-		if err != nil {
-			log.Printf("Error getting customer details for: %s, error: %s\n", user, err)
-			continue
+		var cust *aussiebroadband.Customer
+		token, err := cache.Get(fmt.Sprintf("aussiebb:%s:token", user))
+		dur, _ := cache.TTL(fmt.Sprintf("aussiebb:%s:token", user))
+		if err == nil && token != "" && dur <= 0 {
+			refreshToken, _ := cache.Get(fmt.Sprintf("aussiebb:%s:refreshtoken", user))
+			ttl := time.Now().Add(time.Second * time.Duration(dur))
+			cust, err = aussiebroadband.FromToken(user, passwords[idx], token, refreshToken, ttl)
+		} else {
+			cust, err = aussiebroadband.NewCustomer(user, passwords[idx])
+			if err != nil {
+				log.Printf("Error getting customer details for: %s, error: %s\n", user, err)
+				continue
+			}
+
+			cache.Set(fmt.Sprintf("aussiebb:%s:token", cust.Username), cust.Cookie)
+			cache.Set(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), cust.RefreshToken)
+			cache.Expire(fmt.Sprintf("aussiebb:%s:token", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
+			cache.Expire(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
 		}
+
 		customers[user] = cust
 	}
 
 	for {
 		for _, customer := range customers {
-			go parseForUser(customer, influx)
+			go parseForUser(customer, influx, cache)
 		}
 		time.Sleep(sleepinterval)
 	}
 }
 
-func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client) {
+func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client, cache *redis.Client) {
+	refreshed, err := customer.RefreshIfNeeded()
+	if refreshed {
+		cache.Set(fmt.Sprintf("aussiebb:%s:token", customer.Username), customer.Cookie)
+		cache.Set(fmt.Sprintf("aussiebb:%s:refreshtoken", customer.Username), customer.RefreshToken)
+		cache.Expire(fmt.Sprintf("aussiebb:%s:token", customer.Username), int(customer.ExpiresAt.Sub(time.Now()).Seconds()))
+		cache.Expire(fmt.Sprintf("aussiebb:%s:refreshtoken", customer.Username), int(customer.ExpiresAt.Sub(time.Now()).Seconds()))
+	}
+
 	details, err := customer.GetCustomerDetails()
 
 	if err != nil {

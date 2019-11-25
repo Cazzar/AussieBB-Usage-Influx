@@ -14,6 +14,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var cache *redis.Client
+
 func main() {
 	godotenv.Load(".env")
 	sleepinterval, _ := time.ParseDuration("15m")
@@ -35,7 +37,7 @@ func main() {
 		return
 	}
 
-	cache := redis.New(os.Getenv("REDIS_CONN"))
+	cache = redis.New(os.Getenv("REDIS_CONN"))
 
 	users := strings.Split(os.Getenv("MYAUSSIE_USER"), ",")
 	passwords := strings.Split(os.Getenv("MYAUSSIE_PASS"), ",")
@@ -48,24 +50,15 @@ func main() {
 	customers := make(map[string]*aussiebroadband.Customer)
 
 	for idx, user := range users {
-		var cust *aussiebroadband.Customer
-		token, err := cache.Get(fmt.Sprintf("aussiebb:%s:token", user))
-		dur, _ := cache.TTL(fmt.Sprintf("aussiebb:%s:token", user))
-		if err == nil && token != "" && dur <= 0 {
-			refreshToken, _ := cache.Get(fmt.Sprintf("aussiebb:%s:refreshtoken", user))
-			ttl := time.Now().Add(time.Second * time.Duration(dur))
-			cust, err = aussiebroadband.FromToken(user, passwords[idx], token, refreshToken, ttl)
-		} else {
-			cust, err = aussiebroadband.NewCustomer(user, passwords[idx])
-			if err != nil {
-				log.Printf("Error getting customer details for: %s, error: %s\n", user, err)
-				continue
-			}
-
-			cache.Set(fmt.Sprintf("aussiebb:%s:token", cust.Username), cust.Cookie)
-			cache.Set(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), cust.RefreshToken)
-			cache.Expire(fmt.Sprintf("aussiebb:%s:token", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
-			cache.Expire(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
+		cust, errored := login(user, passwords[idx])
+		if errored {
+			time.AfterFunc(time.Minute * 5, func() {
+				cust, err := login(user, passwords[idx])
+				if err {
+					log.Fatalf("Failed to re-login to user: %s", user)
+				}
+				customers[user] = cust
+			})
 		}
 
 		customers[user] = cust
@@ -77,6 +70,31 @@ func main() {
 		}
 		time.Sleep(sleepinterval)
 	}
+}
+
+func login(user string, password string) (*aussiebroadband.Customer, bool) {
+	var cust *aussiebroadband.Customer
+	token, err := cache.Get(fmt.Sprintf("aussiebb:%s:token", user))
+	dur, _ := cache.TTL(fmt.Sprintf("aussiebb:%s:token", user))
+	if err == nil && token != "" && dur <= 0 {
+		refreshToken, _ := cache.Get(fmt.Sprintf("aussiebb:%s:refreshtoken", user))
+		ttl := time.Now().Add(time.Second * time.Duration(dur))
+		cust, err = aussiebroadband.FromToken(user, password, token, refreshToken, ttl)
+	} else {
+		cust, err = aussiebroadband.NewCustomer(user, password)
+		if err != nil {
+			log.Printf("Error getting customer details for: %s, error: %s\n", user, err)
+			
+			return nil, false
+		}
+
+		cache.Set(fmt.Sprintf("aussiebb:%s:token", cust.Username), cust.Cookie)
+		cache.Set(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), cust.RefreshToken)
+		cache.Expire(fmt.Sprintf("aussiebb:%s:token", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
+		cache.Expire(fmt.Sprintf("aussiebb:%s:refreshtoken", cust.Username), int(cust.ExpiresAt.Sub(time.Now()).Seconds()))
+	}
+
+	return cust, true
 }
 
 func parseForUser(customer *aussiebroadband.Customer, influx influxdb.Client, cache *redis.Client) {
